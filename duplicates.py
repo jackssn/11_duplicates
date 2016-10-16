@@ -1,5 +1,4 @@
 import os
-from pprint import pprint
 
 
 def get_files_duplicates(path):
@@ -17,34 +16,46 @@ def get_files_duplicates(path):
 
     for file in file_list:
         if len(file_list[file]) > 1:
-            duplicate_list = [x for x in file_list[file].values()]
+            duplicate_list = list(file_list[file].values())
             copies = []
             for i, duplicate in enumerate(duplicate_list):
                 size_base = duplicate[0]
                 for d in duplicate_list[i+1:]:
                     if d[0] == size_base and d[1] not in copies:
                         copies.append(d[1])
-            duplicates.append({file: {'base': file_list[file][0][1], 'copies': copies}})
-    if not duplicates:
-        return 'Duplicates not found'
-    return duplicates
+            if copies:
+                duplicates.append({file: {'base': file_list[file][0][1], 'copies': copies}})
+    if duplicates:
+        return duplicates
+    return None
 
 
-def delete_duplicates(file_names):
-    for file_name in file_names:
-        duplicates = [x for x in file_name.values()]
-        for duplicate in duplicates:
-            copies = duplicate['copies']
+def delete_duplicates(duplicate_list):
+    for duplicate_name in duplicate_list:
+        files = duplicate_name.values()
+        for file in files:
+            copies = file['copies']
             for copy in copies:
-                print(copy, 'removed.')
                 os.remove(copy)
+                print(copy, 'successfully removed.')
+
+
+def print_duplicates(duplicates):
+    for duplicate in duplicates:
+        file_name = list(duplicate.keys())[0]
+        file_paths = list(duplicate.values())[0]
+        print('File "%s" located at "%s" and has copies:' % (file_name, file_paths['base']))
+        for copy in file_paths['copies']:
+            print('-> "%s"' % copy)
 
 
 if __name__ == '__main__':
     path = input('Enter path to check duplicates:\n')
-    duplicates = get_files_duplicates(path)
-    pprint(duplicates)
-    remove_btn = input("Remove duplicates? yes / no\n").lower()
-    if remove_btn == 'yes':
-        delete_duplicates(duplicates)
-        print('Success.')
+    duplicate_list = get_files_duplicates(path)
+    if duplicate_list:
+        print_duplicates(duplicate_list)
+        remove_btn = input('Enter "Yes" to remove all duplicates:\n').lower()
+        if remove_btn == 'yes':
+            delete_duplicates(duplicate_list)
+    else:
+        print('Duplicates not found.')
