@@ -2,60 +2,45 @@ import os
 
 
 def get_files_duplicates(path):
-    file_list = {}
-    duplicates = []
+    duplicates_dict = {}
     for root, dirs, files in os.walk(path):
         for file_name in files:
             file_path = os.path.join(root, file_name)
             file_size = os.path.getsize(file_path)
-            if file_name not in file_list:
-                file_list[file_name] = {0: (file_size, file_path)}
+            if (file_name, file_size) not in duplicates_dict:
+                duplicates_dict[(file_name, file_size)] = [file_path]
             else:
-                duplicate_num = len(file_list[file_name])
-                file_list[file_name][duplicate_num] = (file_size, file_path)
-
-    for file in file_list:
-        if len(file_list[file]) > 1:
-            duplicate_list = list(file_list[file].values())
-            copies = []
-            for i, duplicate in enumerate(duplicate_list):
-                size_base = duplicate[0]
-                for d in duplicate_list[i+1:]:
-                    if d[0] == size_base and d[1] not in copies:
-                        copies.append(d[1])
-            if copies:
-                duplicates.append({file: {'base': file_list[file][0][1], 'copies': copies}})
-    if duplicates:
-        return duplicates
-    return None
+                duplicates_dict[(file_name, file_size)].append(file_path)
+    return duplicates_dict
 
 
-def delete_duplicates(duplicate_list):
-    for duplicate_name in duplicate_list:
-        files = duplicate_name.values()
-        for file in files:
-            copies = file['copies']
-            for copy in copies:
-                os.remove(copy)
-                print(copy, 'successfully removed.')
+def delete_duplicates(duplicates_dict):
+    for duplicates in duplicates_dict.values():
+        if len(duplicates) > 1:
+            for duplicate in duplicates[1:]:
+                os.remove(duplicate)
+                print(duplicate, 'successfully removed.')
 
 
-def print_duplicates(duplicates):
-    for duplicate in duplicates:
-        file_name = list(duplicate.keys())[0]
-        file_paths = list(duplicate.values())[0]
-        print('File "%s" located at "%s" and has copies:' % (file_name, file_paths['base']))
-        for copy in file_paths['copies']:
-            print('-> "%s"' % copy)
+def print_duplicates(duplicates_dict):
+    i = 0
+    for one_file in duplicates_dict:
+        file_name = one_file[0]
+        duplicates = duplicates_dict[one_file]
+        if len(duplicates) > 1:
+            i += 1
+            print('%s) File with name "%s" located here: %s\nAnd has duplicates:' % (i, file_name, duplicates[0]))
+            for j, duplicate in enumerate(duplicates[1:]):
+                print('%s.%s) %s' % (i, j+1, duplicate))
 
 
 if __name__ == '__main__':
-    path = input('Enter path to check duplicates:\n')
-    duplicate_list = get_files_duplicates(path)
-    if duplicate_list:
-        print_duplicates(duplicate_list)
-        remove_btn = input('Enter "Yes" to remove all duplicates:\n').lower()
+    path = input('Enter path to check duplicates_dict:\n')
+    duplicate_dict = get_files_duplicates(path)
+    if duplicate_dict:
+        print_duplicates(duplicate_dict)
+        remove_btn = input('Enter "Yes" to remove duplicates: ').lower()
         if remove_btn == 'yes':
-            delete_duplicates(duplicate_list)
+            delete_duplicates(duplicate_dict)
     else:
         print('Duplicates not found.')
