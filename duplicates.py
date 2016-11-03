@@ -15,29 +15,29 @@ def get_files_duplicates(path):
 
 
 def delete_duplicates(duplicates_dict):
-    for duplicates in duplicates_dict.values():
-        if len(duplicates) > 1:
-            for duplicate in duplicates[1:]:
-                os.remove(duplicate)
-                print(duplicate, 'successfully removed.')
+    duplicates = filter(lambda x: len(x) > 1, duplicates_dict.values())
+    for duplicate in duplicates:
+        for one_file in duplicate[1:]:
+            os.remove(one_file)
+            print_deleted_duplicate(one_file)
+
+
+def print_deleted_duplicate(file_path):
+    print('%s was removed.' % file_path)
 
 
 def print_duplicates(duplicates_dict):
-    i = 0
-    for one_file in duplicates_dict:
-        file_name = one_file[0]
-        duplicates = duplicates_dict[one_file]
-        if len(duplicates) > 1:
-            i += 1
-            print('%s) File with name "%s" located here: %s\nAnd has duplicates:' % (i, file_name, duplicates[0]))
-            for j, duplicate in enumerate(duplicates[1:]):
-                print('%s.%s) %s' % (i, j+1, duplicate))
+    duplicates = filter(lambda x: len(x) > 1, duplicates_dict.values())
+    for duplicate in duplicates:
+        print('\nBasic file located here: %s\nAnd has duplicates:' % duplicate[0])
+        for i, current_duplicate in enumerate(duplicate[1:]):
+            print('\t%s) %s' % (i+1,current_duplicate))
 
 
 if __name__ == '__main__':
-    path = input('Enter path to check duplicates_dict:\n')
+    path = input('Enter path to check duplicates:\n')
     duplicate_dict = get_files_duplicates(path)
-    if duplicate_dict:
+    if list(filter(lambda x: len(x) > 1, duplicate_dict.values())):
         print_duplicates(duplicate_dict)
         remove_btn = input('Enter "Yes" to remove duplicates: ').lower()
         if remove_btn == 'yes':
