@@ -16,14 +16,20 @@ def get_files_duplicates(path):
 
 def delete_duplicates(duplicates_dict):
     duplicates = filter(lambda x: len(x) > 1, duplicates_dict.values())
+    removed_success, removed_error = [], []
     for duplicate in duplicates:
         for one_file in duplicate[1:]:
-            os.remove(one_file)
-            print_deleted_duplicate(one_file)
+            try:
+                os.remove(one_file)
+                removed_success.append(one_file)
+            except:
+                removed_error.append(one_file)
+    return removed_success, removed_error
 
 
-def print_deleted_duplicate(file_path):
-    print('%s was removed.' % file_path)
+def print_deleting_result(duplicate_list):
+    for d in duplicate_list:
+        print(d)
 
 
 def print_duplicates(duplicates_dict):
@@ -31,7 +37,7 @@ def print_duplicates(duplicates_dict):
     for duplicate in duplicates:
         print('\nBasic file located here: %s\nAnd has duplicates:' % duplicate[0])
         for i, current_duplicate in enumerate(duplicate[1:]):
-            print('\t%s) %s' % (i+1,current_duplicate))
+            print('\t%s) %s' % (i+1, current_duplicate))
 
 
 if __name__ == '__main__':
@@ -41,6 +47,16 @@ if __name__ == '__main__':
         print_duplicates(duplicate_dict)
         remove_btn = input('Enter "Yes" to remove duplicates: ').lower()
         if remove_btn == 'yes':
-            delete_duplicates(duplicate_dict)
+            removed_success, removed_error = delete_duplicates(duplicate_dict)
+            if removed_success:
+                print('Successfully deleted:')
+                print_deleting_result(removed_success)
+            else:
+                print('Nothing deleted.')
+            if removed_error:
+                print('Error deleting:')
+                print_deleting_result(removed_error)
+            else:
+                print('Nothing errors.')
     else:
         print('Duplicates not found.')
